@@ -4,9 +4,11 @@ import (
 	"context"
 	"grpc-course-protobuf/pb/user"
 	"log"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func main() {
@@ -15,9 +17,12 @@ func main() {
 		log.Fatal("Failed to create client ", err)
 	}
 
+	now := time.Now()
+
 	userClient := user.NewUserServiceClient(clientConn)
 	res, err := userClient.CreateUser(context.Background(), &user.User{
 		Age: -1,
+		BirthDate: timestamppb.New(now),
 	})
 	if err != nil {
 		// st, ok := status.FromError(err)
