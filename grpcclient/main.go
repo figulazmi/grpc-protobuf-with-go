@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"grpc-course-protobuf/pb/chat"
+	"io"
 	"log"
 
 	"google.golang.org/grpc"
@@ -16,30 +18,23 @@ func main() {
 	}
 
 	chatClient := chat.NewChatServiceClient(clientConn)
-	stream, err := chatClient.SendMessage(context.Background())
+	stream, err := chatClient.ReceiveMessage(context.Background(), &chat.ReceiveMessageRequest{
+		UserId: 30,
+	})
 	if err != nil {
 		log.Fatal("Failed to send message", err)
 	}
 
-	err = stream.Send(&chat.ChatMessage{
-		UserId: 123,
-		Content: "Hello from client",
-	})
-	if err != nil {
-		log.Fatal("Failed to send via stream ", err)
-	}
-	
-	err = stream.Send(&chat.ChatMessage{
-		UserId: 123,
-		Content: "Hello again",
-	})
-	if err != nil {
-		log.Fatal("Failed to send via stream ", err)
-	}
 
-	res, err := stream.CloseAndRecv()
-	if err != nil {
-		log.Fatal("Failed close", err)
+	for {
+		msg, err := stream.Recv()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			log.Fatal("Failed to receive message ", err)
+		}
+	
+		log.Printf("Got message to %d content %s", msg.UserId, msg.Content)
 	}
-	log.Println("Connection is closed. Message: ", res.Message)
 }
