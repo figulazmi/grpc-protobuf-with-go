@@ -6,9 +6,7 @@ import (
 	"log"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -19,26 +17,35 @@ func main() {
 
 	userClient := user.NewUserServiceClient(clientConn)
 	res, err := userClient.CreateUser(context.Background(), &user.User{
-		Age: 30,
+		Age: -1,
 	})
 	if err != nil {
-		st, ok := status.FromError(err)
-		// Error grpc
-		if ok {
-			if st.Code() == codes.InvalidArgument {
-				log.Println("There is InvalidArgument error: ", st.Message())
-			} else if st.Code() == codes.Unknown {
-				log.Println("There is Unknown error: ", st.Message())
-			} else if st.Code() == codes.Internal {
-				log.Println("There is Internal error: ", st.Message())
-			}
+		// st, ok := status.FromError(err)
+		// // Error grpc
+		// if ok {
+		// 	if st.Code() == codes.InvalidArgument {
+		// 		log.Println("There is InvalidArgument error: ", st.Message())
+		// 	} else if st.Code() == codes.Unknown {
+		// 		log.Println("There is Unknown error: ", st.Message())
+		// 	} else if st.Code() == codes.Internal {
+		// 		log.Println("There is Internal error: ", st.Message())
+		// 	}
 
-			return
-		}
+		// 	return
+		// }
 		
 		log.Println("Failed to send message ", err)
 		return
 	}
 
-	log.Println("Response from server ", res.Message)
+	if !res.Base.IsSuccess {
+		if res.Base.StatusCode == 400 {
+			log.Println("There is InvalidArgument error: ", res.Base.Message)
+		} else if res.Base.StatusCode == 500 {
+			log.Println("There is Internal error: ", res.Base.Message)
+		}
+		return
+	}
+
+	log.Println("Response from server ", res.Base.Message)
 }

@@ -1,8 +1,9 @@
 syntax = "proto3";
 
 package user;
+import "common/base_response.proto";
 
-option go_package = "path/to/pb/user";
+option go_package = "grpc-course-protobuf/pb/user";
 
 service UserService {
   rpc CreateUser(User) returns (CreateResponse);
@@ -27,5 +28,5 @@ message User {
 }
 
 message CreateResponse {
-  string message = 1;
+  common.BaseResponse base = 1;
 }
